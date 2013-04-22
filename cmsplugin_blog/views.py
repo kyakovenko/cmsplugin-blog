@@ -1,10 +1,14 @@
 import datetime
+from django.views.generic.list import ListView
+from tagging.models import Tag, TaggedItem
+from tagging.utils import get_tag
+
 try: # pragma: no cover
-    from django.views.generic.dates import BaseDateDetailView, ArchiveIndexView, _date_lookup_for_field, _date_from_string
-    from django.views.generic.detail import SingleObjectTemplateResponseMixin
-except ImportError: # pragma: no cover
-    from cbv.views.detail import SingleObjectTemplateResponseMixin
-    from cbv.views.dates import BaseDateDetailView, ArchiveIndexView, _date_lookup_for_field, _date_from_string
+    from django.views.generic.dates import BaseDateDetailView, ArchiveIndexView, _date_lookup_for_field, _date_from_string, YearArchiveView, MonthArchiveView, WeekArchiveView, DayArchiveView
+    from django.views.generic.detail import SingleObjectTemplateResponseMixin, DetailView
+except ImportError:  # pragma: no cover
+    from cbv.views.detail import SingleObjectTemplateResponseMixin, DetailView
+    from cbv.views.dates import BaseDateDetailView, ArchiveIndexView, YearArchiveView, MonthArchiveView, WeekArchiveView, DayArchiveView, _date_lookup_for_field, _date_from_string
 
 from django.http import Http404
 from django.shortcuts import redirect
@@ -17,11 +21,12 @@ from simple_translation.utils import get_translation_filter, get_translation_fil
 from cmsplugin_blog.models import Entry
 from cmsplugin_blog.utils import is_multilingual
 
+
 class Redirect(Exception):
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-        
+
 class DateDetailView(SingleObjectTemplateResponseMixin, BaseDateDetailView):
     # Override to fix django bug
     def get_object(self, queryset=None):
@@ -116,3 +121,90 @@ class EntryArchiveIndexView(ArchiveIndexView):
         queryset = super(EntryArchiveIndexView, self).get_dated_queryset(**lookup)
         queryset = filter_queryset_language(self.request, queryset)
         return queryset.published()
+
+
+class BlogArchiveMixin(object):
+    model = Entry
+    date_field = 'pub_date'
+    make_object_list = True
+    allow_empty = True
+    month_format = '%m'
+
+    def get_queryset(self):
+        queryset = super(BlogArchiveMixin, self).get_queryset().published()
+        if queryset:
+            set_language_changer(self.request, queryset[0].language_changer)
+        return queryset
+
+
+class BlogYearArchiveView(BlogArchiveMixin, YearArchiveView):
+    template_name = 'cmsplugin_blog/entry_archive_year.html'
+
+
+class BlogMonthArchiveView(BlogArchiveMixin, MonthArchiveView):
+    template_name = 'cmsplugin_blog/entry_archive_month.html'
+
+
+class BlogDayArchiveView(BlogArchiveMixin, DayArchiveView):
+    template_name = 'cmsplugin_blog/entry_archive_day.html'
+
+
+class BlogAuthorArchiveView(DetailView):
+    model = Entry
+    allow_empty = True,
+    template_name = 'cmsplugin_blog/entry_author_list.html',
+
+    def get_queryset(self):
+        author = self.kwargs['author']
+        queryset = super(BlogAuthorArchiveView, self).get_queryset().published().filter(entrytitle__author__username=author)
+        if queryset:
+            set_language_changer(self.request, queryset[0].language_changer)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        return super(BlogAuthorArchiveView, self).get_context_data(author=self.kwargs['author'], **kwargs)
+
+
+class TaggedObjectList(ListView):
+    queryset_or_model = None
+    tag = None
+    related_tags = False
+    related_tag_counts = True
+
+    def get(self, request, *args, **kwargs):
+        tag = self.tag or kwargs.get('tag')
+        self.tag_instance = get_tag(tag)
+        return super(TaggedObjectList, self).get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        if hasattr(self.queryset_or_model, 'objects'):
+            return self.queryset_or_model.objects.all()
+        return self.queryset_or_model
+
+    def get_context_data(self, **kwargs):
+        tag = self.tag or self.kwargs['tag']
+        self.tag_instance = get_tag(self.tag or self.kwargs['tag'])
+        if self.tag_instance is None:
+            raise Http404(_('No Tag found matching "%s".') % tag)
+        context = super(TaggedObjectList, self).get_context_data(**kwargs)
+        if self.related_tags:
+            context['related_tags'] = Tag.objects.related_for_model(
+                self.tag_instance,
+                context['queryset'],
+                counts=self.related_tag_counts,
+            )
+        return context
+
+    def get_queryset(self):
+        return TaggedItem.objects.get_by_model(self.queryset_or_model, self.tag_instance)
+
+
+class BlogTaggedArchiveView(TaggedObjectList):
+    template_name = 'cmsplugin_blog/entry_list.html'
+    queryset_or_model = Entry.objects.all()
+
+    def get_queryset(self):
+        queryset = super(BlogTaggedArchiveView, self).get_queryset().published()
+        if queryset:
+            set_language_changer(self.request, queryset[0].language_changer)
+        return queryset
