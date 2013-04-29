@@ -4,13 +4,13 @@ import os
 import cmsplugin_blog
 
 CLASSIFIERS = [
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Web Environment',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Framework :: Django',
+    'Development Status :: 5 - Production/Stable',
+    'Environment :: Web Environment',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: BSD License',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python',
+    'Framework :: Django',
 ]
 
 setup(
@@ -29,7 +29,7 @@ setup(
         ]
     },
     classifiers=CLASSIFIERS,
-    test_suite = "cmsplugin_blog.test.run_tests.run_tests",
+    test_suite="cmsplugin_blog.test.run_tests.run_tests",
     include_package_data=True,
     zip_safe=False,
     install_requires=['django-cms', 'simple-translation', 'djangocms-utils', 'django-tagging', 'django-missing'],
