@@ -1,16 +1,17 @@
-from django.contrib.sites.models import get_current_site
-from django.contrib.syndication.views import Feed
+from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.contrib.syndication.views import Feed
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.sites.models import get_current_site
 
-from cms import settings
 from cms.utils import get_language_from_request
 from simple_translation.translation_pool import translation_pool
-from simple_translation.templatetags.simple_translation_tags import get_preferred_translation_from_lang
 from simple_translation.utils import get_translation_filter, get_translation_filter_language
+from simple_translation.templatetags.simple_translation_tags import get_preferred_translation_from_lang
 
 from cmsplugin_blog.models import Entry
 from cmsplugin_blog.utils import is_multilingual, get_lang_name, add_current_root
+
 
 class EntriesFeed(Feed):
     title_template = "cmsplugin_blog/feed_entries_title.html"
@@ -47,7 +48,7 @@ class EntriesFeed(Feed):
         return _(u"%(site)s blog entries in %(lang)s") % {'site': self.site.name, 'lang': get_lang_name(self.language_code)}
 
     def get_queryset(self, obj):
-        if not is_multilingual() or self.any_language :
+        if not is_multilingual() or self.any_language:
             qs = Entry.published.order_by('-pub_date')
         else:
             kw = get_translation_filter_language(Entry, self.language_code)
@@ -90,7 +91,8 @@ class TaggedEntriesFeed(EntriesFeed):
     def get_queryset(self, obj):
         qs = super(TaggedEntriesFeed, self).get_queryset(obj)
         return Entry.tagged.with_any(self.tag, queryset=qs).distinct()
-        
+
+
 class AuthorEntriesFeed(EntriesFeed):
     title_template = "cmsplugin_blog/feed_author_title.html"
     description_template = "cmsplugin_blog/feed_author_description.html"

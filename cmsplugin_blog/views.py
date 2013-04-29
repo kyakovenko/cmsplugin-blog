@@ -1,23 +1,28 @@
 import datetime
-from django.views.generic.list import ListView
-from tagging.models import Tag, TaggedItem
 from tagging.utils import get_tag
-
-try: # pragma: no cover
-    from django.views.generic.dates import BaseDateDetailView, ArchiveIndexView, _date_lookup_for_field, _date_from_string, YearArchiveView, MonthArchiveView, WeekArchiveView, DayArchiveView
-    from django.views.generic.detail import SingleObjectTemplateResponseMixin, DetailView
-except ImportError:  # pragma: no cover
-    from cbv.views.detail import SingleObjectTemplateResponseMixin, DetailView
-    from cbv.views.dates import BaseDateDetailView, ArchiveIndexView, YearArchiveView, MonthArchiveView, WeekArchiveView, DayArchiveView, _date_lookup_for_field, _date_from_string
+from tagging.models import Tag, TaggedItem
 
 from django.http import Http404
 from django.shortcuts import redirect
+from django.utils.translation import ugettext_lazy as _
 
-from cms.middleware.multilingual import has_lang_prefix
+from django.views.generic.dates import BaseDateDetailView
+from django.views.generic.dates import ArchiveIndexView
+#from django.views.generic.dates import _date_lookup_for_field
+from django.views.generic.dates import _date_from_string
+from django.views.generic.dates import YearArchiveView
+from django.views.generic.dates import MonthArchiveView
+from django.views.generic.dates import WeekArchiveView
+from django.views.generic.dates import DayArchiveView
+
+from django.views.generic.list import ListView
+from django.views.generic.detail import SingleObjectTemplateResponseMixin, DetailView
+
 from menus.utils import set_language_changer
 
 from simple_translation.middleware import filter_queryset_language
 from simple_translation.utils import get_translation_filter, get_translation_filter_language
+
 from cmsplugin_blog.models import Entry
 from cmsplugin_blog.utils import is_multilingual
 
@@ -26,6 +31,7 @@ class Redirect(Exception):
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
+
 
 class DateDetailView(SingleObjectTemplateResponseMixin, BaseDateDetailView):
     # Override to fix django bug
@@ -103,6 +109,7 @@ class EntryDateDetailView(DateDetailView):
             return super(EntryDateDetailView, self).dispatch(request, *args, **kwargs)
         except Redirect, e:
             return redirect(*e.args, **e.kwargs)
+
 
 class EntryArchiveIndexView(ArchiveIndexView):
     date_field = 'pub_date'
