@@ -16,11 +16,11 @@ CLASSIFIERS = [
 setup(
     name='cmsplugin-blog',
     version=cmsplugin_blog.get_version(),
-    description='This is a blog app/plugin for django-cms 2.2',
+    description='This is a blog app/plugin for django-cms 2.4',
     long_description=open(os.path.join(os.path.dirname(__file__), 'README.txt')).read(),
     author='Oyvind Saltvik',
     author_email='oyvind.saltvik@gmail.com',
-    url='http://github.com/fivethreeo/cmsplugin-blog/',
+    url='http://github.com/kyakovenko/cmsplugin-blog/',
     packages=find_packages(),
     package_data={
         'cmsplugin_blog': [

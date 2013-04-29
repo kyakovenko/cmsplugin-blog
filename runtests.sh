@@ -2,11 +2,10 @@
 
 find . -name '*.pyc' -delete
 
-args=("$@")
+args="$@"
 num_args=${#args[@]}
 index=0
 
-django=12
 reuse_env=true
 disable_coverage=true
 update_requirements=false
@@ -63,28 +62,28 @@ python_executeable=`which $python`
 
 echo "using python at: $python_executeable"
 
-venv="venv-$python-$django"
+venv=".ve"
 
-if [ $reuse_env == false ]; then
-    rm -rf $venv
+if [ $reuse_env = false ]; then
+    rm -Rf $venv
     echo "deleted virtualenv: $venv"
 fi
 
 if [ ! -d $venv ]; then
     echo "building virtualenv"
-    virtualenv $venv --distribute --no-site-packages -p $python_executeable
+    virtualenv --unzip-setuptools -p $python_executeable $venv
     update_requirements=true
 else
     echo "reusing current virualenv: $venv"
 fi
 
-if [ $update_requirements == true ]; then
+if [ $update_requirements = true ]; then
     echo "updating requirements"
-    $venv/bin/pip install -r requirements-$django.txt
-    $venv/bin/pip install -r requirements.txt
+    $venv/bin/pip install -r requirements.pip
+    $venv/bin/pip install -r requirements-tests.pip
 fi
 
-if [ $disable_coverage == false ]; then
+if [ $disable_coverage = false ]; then
     $venv/bin/coverage run --rcfile=coveragerc setup.py test
     retcode=$?
     echo "build coverage reports"
