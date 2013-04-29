@@ -12,7 +12,6 @@ blog_info_dict = {
 }
 
 
-
 def language_changer(lang):
     request = language_changer.request
     return request.get_full_path()

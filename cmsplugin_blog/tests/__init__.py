@@ -10,16 +10,19 @@ from cms.models.placeholdermodel import Placeholder
 from cmsplugin_blog.models import Entry, LatestEntriesPlugin
 from cmsplugin_blog.test.testcases import BaseBlogTestCase
 
+
 class NULL:
     pass
-    
+
+
 class SettingsOverride(object):
     """
-    Overrides Django settings within a context and resets them to their inital
+    Overrides Django settings within a context and resets them to their initial
     values on exit.
+
     Example:
     with SettingsOverride(DEBUG=True):
-    # do something
+        ... do something
     """
     
     def __init__(self, **overrides):
@@ -36,8 +39,9 @@ class SettingsOverride(object):
             if value is not NULL:
                 setattr(settings, key, value)
             else:
-                delattr(settings,key) # do not pollute the context!
-                
+                delattr(settings, key)  # do not pollute the context!
+
+
 class BlogTestCase(BaseBlogTestCase):
     
     def test_01_apphook_added(self):
@@ -46,14 +50,12 @@ class BlogTestCase(BaseBlogTestCase):
         
     def test_02_title_absolute_url(self):
         published_at = datetime.datetime.now() - datetime.timedelta(hours=1)
-        title, entry = self.create_entry_with_title(published=True, 
-            published_at=published_at)
+        title, entry = self.create_entry_with_title(published=True, published_at=published_at)
         self.assertEquals(title.get_absolute_url(), '/test-page-1/%s/entry-title/' % published_at.strftime('%Y/%m/%d'))
         
     def test_03_admin_add(self):
         
-        superuser = User(username="super", is_staff=True, is_active=True, 
-            is_superuser=True)
+        superuser = User(username="super", is_staff=True, is_active=True, is_superuser=True)
         superuser.set_password("super")
         superuser.save()
         
@@ -73,8 +75,7 @@ class BlogTestCase(BaseBlogTestCase):
         
     def test_04_admin_change(self):
         
-        superuser = User(username="super", is_staff=True, is_active=True, 
-            is_superuser=True)
+        superuser = User(username="super", is_staff=True, is_active=True, is_superuser=True)
         superuser.set_password("super")
         superuser.save()
         
@@ -90,18 +91,17 @@ class BlogTestCase(BaseBlogTestCase):
         # edit english
         response = self.client.get(edit_url, {'language': 'en'})
         self.assertEquals(response.status_code, 200)
-        self.assertContains(response, 'value="English" type="button" disabled' )
+        self.assertContains(response, 'value="English" type="button" disabled')
 
         
         # edit german
         response = self.client.get(edit_url, {'language': 'de'})
         self.assertEquals(response.status_code, 200)
-        self.assertContains(response, 'value="German" type="button" disabled' )
+        self.assertContains(response, 'value="German" type="button" disabled')
 
     def test_05_admin_add_post(self):
         
-        superuser = User(username="super", is_staff=True, is_active=True, 
-            is_superuser=True)
+        superuser = User(username="super", is_staff=True, is_active=True, is_superuser=True)
         superuser.set_password("super")
         superuser.save()
         
@@ -129,11 +129,9 @@ class BlogTestCase(BaseBlogTestCase):
     def test_06_admin_changelist(self):
         
         published_at = datetime.datetime.now() - datetime.timedelta(hours=1)
-        title, entry = self.create_entry_with_title(published=True, 
-            published_at=published_at)
+        title, entry = self.create_entry_with_title(published=True, published_at=published_at)
                     
-        superuser = User(username="super", is_staff=True, is_active=True, 
-            is_superuser=True)
+        superuser = User(username="super", is_staff=True, is_active=True, is_superuser=True)
         superuser.set_password("super")
         superuser.save()
         
@@ -147,16 +145,14 @@ class BlogRSSTestCase(BaseBlogTestCase):
     
     def test_01_posts_one_language(self):
         published_at = datetime.datetime.now() - datetime.timedelta(hours=1)
-        title, entry = self.create_entry_with_title(published=True, 
-            published_at=published_at)
+        title, entry = self.create_entry_with_title(published=True, published_at=published_at)
         response = self.client.get(reverse('en:blog_rss'))
         self.assertEquals(response.status_code, 200)
         self.assertContains(response, 'in English')
         
     def test_02_posts_all_languages(self):
         published_at = datetime.datetime.now() - datetime.timedelta(hours=1)
-        title, entry = self.create_entry_with_title(published=True, 
-            published_at=published_at)
+        title, entry = self.create_entry_with_title(published=True, published_at=published_at)
         response = self.client.get(reverse('en:blog_rss_any'))
         self.assertEquals(response.status_code, 200)
         self.assertNotContains(response, 'in English')
@@ -164,8 +160,7 @@ class BlogRSSTestCase(BaseBlogTestCase):
     def test_03_posts_by_author_single_language(self):
         user = User.objects.all()[0]
         published_at = datetime.datetime.now() - datetime.timedelta(hours=1)
-        title, entry = self.create_entry_with_title(published=True, 
-            published_at=published_at, author=user)
+        title, entry = self.create_entry_with_title(published=True, published_at=published_at, author=user)
         response = self.client.get(reverse('en:blog_rss_author', kwargs={'author': user.username}))
         self.assertEquals(response.status_code, 200)
         self.assertContains(response, 'in English')  
@@ -173,24 +168,21 @@ class BlogRSSTestCase(BaseBlogTestCase):
     def test_04_posts_by_author_all_languages(self):
         user = User.objects.all()[0]
         published_at = datetime.datetime.now() - datetime.timedelta(hours=1)
-        title, entry = self.create_entry_with_title(published=True, 
-            published_at=published_at, author=user)
+        title, entry = self.create_entry_with_title(published=True, published_at=published_at, author=user)
         response = self.client.get(reverse('en:blog_rss_any_author', kwargs={'author': user.username}))
         self.assertEquals(response.status_code, 200)
         self.assertNotContains(response, 'in English')
         
     def test_05_posts_tagged_single_language(self):
         published_at = datetime.datetime.now() - datetime.timedelta(hours=1)
-        title, entry = self.create_entry_with_title(published=True, 
-            published_at=published_at)
+        title, entry = self.create_entry_with_title(published=True, published_at=published_at)
         response = self.client.get(reverse('en:blog_rss_tagged', kwargs={'tag': 'test'}))
         self.assertEquals(response.status_code, 200)
         self.assertContains(response, 'in English')  
         
     def test_06_posts_tagged_all_languages(self):
         published_at = datetime.datetime.now() - datetime.timedelta(hours=1)
-        title, entry = self.create_entry_with_title(published=True, 
-            published_at=published_at)
+        title, entry = self.create_entry_with_title(published=True, published_at=published_at)
         response = self.client.get(reverse('en:blog_rss_any_tagged', kwargs={'tag': 'test'}))
         self.assertEquals(response.status_code, 200)
         self.assertNotContains(response, 'in English') 
@@ -199,8 +191,7 @@ class BlogRSSTestCase(BaseBlogTestCase):
         mwc = [mw for mw in settings.MIDDLEWARE_CLASSES if mw != 'cmsplugin_blog.middleware.MultilingualBlogEntriesMiddleware']
         with SettingsOverride(MIDDLEWARE_CLASSES=mwc):
             published_at = datetime.datetime.now() - datetime.timedelta(hours=1)
-            title, entry = self.create_entry_with_title(published=True, 
-                published_at=published_at)
+            title, entry = self.create_entry_with_title(published=True, published_at=published_at)
             response = self.client.get(reverse('en:blog_rss'))
             self.assertEquals(response.status_code, 200)
             self.assertNotContains(response, 'in English')
@@ -212,8 +203,7 @@ class ViewsTestCase(BaseBlogTestCase):
         user = User.objects.all()[0]
         
         published_at = datetime.datetime.now() - datetime.timedelta(hours=1)
-        title, entry = self.create_entry_with_title(published=True, 
-            published_at=published_at, author=user)
+        title, entry = self.create_entry_with_title(published=True, published_at=published_at, author=user)
         entry.tags = 'test'
         entry.save()
         
@@ -269,13 +259,13 @@ class ViewsTestCase(BaseBlogTestCase):
                 'slug': title.slug
             }))
         self.assertEquals(response.status_code, 200)
-        
+
+
 class LanguageChangerTestCase(BaseBlogTestCase):
     
     def test_01_language_changer(self):
         published_at = datetime.datetime(2011, 8, 31, 11, 0)
-        title, entry = self.create_entry_with_title(published=True, 
-            published_at=published_at)
+        title, entry = self.create_entry_with_title(published=True, published_at=published_at)
         de_title = self.create_entry_title(entry, title='german', language='de')
         
         from django.utils.translation import activate
@@ -287,13 +277,13 @@ class LanguageChangerTestCase(BaseBlogTestCase):
         self.assertEquals(entry.language_changer('de'), u'/test-page-1/2011/08/31/german/')
         self.assertEquals(entry.language_changer('nb'), u'/test-page-1/')
         self.assertEquals(entry.language_changer('nn'), u'/')
-        
+
+
 class RedirectTestCase(BaseBlogTestCase):
     
     def test_01_redirect_existing_language(self):
         published_at = datetime.datetime(2011, 8, 31, 11, 0)
-        title, entry = self.create_entry_with_title(published=True, 
-            published_at=published_at, language='de')
+        title, entry = self.create_entry_with_title(published=True, published_at=published_at, language='de')
             
         with SettingsOverride(DEBUG=True):
             self.client.get(u'/en/')
@@ -301,7 +291,7 @@ class RedirectTestCase(BaseBlogTestCase):
             with SettingsOverride(MIDDLEWARE_CLASSES=mwc):
                 response = self.client.get(u'/test-page-1/2011/08/31/entry-title/')
 	        self.assertEqual(response.status_code, 404)
-	        
+
             response = self.client.get(u'/test-page-1/2011/08/31/entry-title/')
             self.assertRedirects(response, u'/de/test-page-1/2011/08/31/entry-title/')
             
@@ -316,7 +306,8 @@ class RedirectTestCase(BaseBlogTestCase):
             response = self.client.get(u'/de/')
             response = self.client.get(u'/test-page-1/2011/08/31/entry-title/')
             self.assertEqual(response.status_code, 404)
-         
+
+
 class LatestEntriesTestCase(BaseBlogTestCase):
     
     def test_01_plugin(self):
@@ -325,10 +316,10 @@ class LatestEntriesTestCase(BaseBlogTestCase):
             REQUEST = {}
         r = MockRequest()
         published_at = datetime.datetime(2011, 8, 30, 11, 0)
-        title, entry = self.create_entry_with_title(published=True, 
-            published_at=published_at, language='en', title='english title')
-        title, entry = self.create_entry_with_title(published=True, 
-            published_at=published_at, language='de', title='german title')
+        title, entry = self.create_entry_with_title(published=True,
+                                                    published_at=published_at, language='en', title='english title')
+        title, entry = self.create_entry_with_title(published=True,
+                                                    published_at=published_at, language='de', title='german title')
         ph = Placeholder(slot='main')
         ph.save()
         from django.utils.translation import activate
@@ -349,7 +340,6 @@ class SitemapsTestCase(BaseBlogTestCase):
     
     def test_01_sitemaps(self):
         published_at = datetime.datetime.now() - datetime.timedelta(hours=1)
-        title, entry = self.create_entry_with_title(published=True, 
-            published_at=published_at)
+        title, entry = self.create_entry_with_title(published=True, published_at=published_at)
         response = self.client.get('/sitemap.xml')
         self.assertEquals(response.status_code, 200)

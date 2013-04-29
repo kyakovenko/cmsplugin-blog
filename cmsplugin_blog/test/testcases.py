@@ -1,5 +1,6 @@
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
+from django.utils.translation import activate
 from django.template.defaultfilters import slugify
 
 from cms.test_utils.testcases import CMSTestCase
@@ -10,12 +11,13 @@ from simple_translation.utils import get_translation_manager
 
 from cmsplugin_blog.models import Entry
 
+
 class BaseBlogTestCase(CMSTestCase):
 
     def setUp(self):
         superuser = User.objects.create_superuser('admin', 'admin@admin.com', 'admin')
         home = create_page('home', 'nav_playground.html', 'en', published=True, created_by=superuser)
-        page = create_page( 'test-page-1', 'nav_playground.html', 'en', parent=home, published=True, created_by=superuser)
+        page = create_page('test-page-1', 'nav_playground.html', 'en', parent=home, created_by=superuser)
         english_title = page.title_set.all()[0]
         self.assertEquals(english_title.language, 'en')
         Title.objects.create(
@@ -33,7 +35,10 @@ class BaseBlogTestCase(CMSTestCase):
             page=page
         )
         page.title_set.all().update(application_urls='BlogApphook')
-        reverse('en:blog_archive_index') # fill cache
+        page.publish()
+
+        activate("en")
+        reverse('blog_archive_index')  # fill cache
         
     def create_entry_with_title(self, title=None, slug=None, language=None, published=False, published_at=None, author=None, **kwargs):
         entry_kwargs = {'is_published': published}

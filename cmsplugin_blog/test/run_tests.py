@@ -23,15 +23,15 @@ INSTALLED_APPS = [
 
 MIDDLEWARE_CLASSES = [
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.middleware.doc.XViewMiddleware',
-    'django.contrib.csrf.middleware.CsrfViewMiddleware',
-    'cms.middleware.multilingual.MultilingualURLMiddleware',
-    'cms.middleware.user.CurrentUserMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'cms.middleware.page.CurrentPageMiddleware',
+    'cms.middleware.user.CurrentUserMiddleware',
     'cms.middleware.toolbar.ToolbarMiddleware',
-    'cmsplugin_blog.middleware.MultilingualBlogEntriesMiddleware',
+    'cms.middleware.language.LanguageCookieMiddleware',
 ]
 
 TEMPLATE_CONTEXT_PROCESSORS = [

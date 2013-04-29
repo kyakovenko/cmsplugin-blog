@@ -1,5 +1,7 @@
-from django.conf.urls.defaults import *
 from django.contrib import admin
+from django.conf.urls.i18n import i18n_patterns
+from django.conf.urls import patterns, include, url
+
 from cmsplugin_blog.sitemaps import BlogSitemap
 
 admin.autodiscover()
@@ -15,6 +17,7 @@ urlpatterns += patterns('',
         'sitemaps': {
             'blogentries': BlogSitemap
         }
-    }),
-    url(r'^', include('cms.urls'))
+    })
 )
+
+urlpatterns += i18n_patterns('', url(r'^', include('cms.urls')))
