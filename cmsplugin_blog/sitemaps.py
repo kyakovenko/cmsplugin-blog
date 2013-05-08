@@ -1,6 +1,7 @@
 from django.contrib.sitemaps import Sitemap
 from cmsplugin_blog.models import EntryTitle
 
+
 class BlogSitemap(Sitemap):
     changefreq = "monthly"
     priority = 0.5

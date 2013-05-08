@@ -5,6 +5,7 @@ from django.utils.safestring import mark_safe
 from tagging.models import Tag
 from cmsplugin_blog.models import Entry
 
+
 class AutoCompleteTagInput(forms.TextInput):
     class Media:
         css = {
@@ -25,16 +26,13 @@ class AutoCompleteTagInput(forms.TextInput):
         tag_list = simplejson.dumps([tag.name for tag in page_tags],
                                     ensure_ascii=False)
         return output + mark_safe(u'''<script type="text/javascript">
-            
             var availableTags = %s
-            
             function split( val ) {
                 return val.split( /,\s*|^/ );
             }
             function extractLast( term ) {
                 return split( term ).pop();
             }
-            
             blog.jQuery("#id_%s")
                 // don't navigate away from the field on tab when selecting an item
                 .bind( "keydown", function( event ) {
@@ -66,7 +64,4 @@ class AutoCompleteTagInput(forms.TextInput):
                         return false;
                     }
             });
-
-
-
             </script>''' % (tag_list, name))

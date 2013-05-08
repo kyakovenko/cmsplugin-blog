@@ -1,27 +1,20 @@
 import datetime
-from tagging.utils import get_tag
-from tagging.models import Tag, TaggedItem
 
 from django.http import Http404
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
-
-from django.views.generic.dates import BaseDateDetailView
-from django.views.generic.dates import ArchiveIndexView
-#from django.views.generic.dates import _date_lookup_for_field
-from django.views.generic.dates import _date_from_string
-from django.views.generic.dates import YearArchiveView
-from django.views.generic.dates import MonthArchiveView
-from django.views.generic.dates import WeekArchiveView
-from django.views.generic.dates import DayArchiveView
-
+from django.views.generic.dates import (BaseDateDetailView, ArchiveIndexView,
+    YearArchiveView, MonthArchiveView, DayArchiveView, _date_from_string)
+from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.list import ListView
-from django.views.generic.detail import SingleObjectTemplateResponseMixin, DetailView
 
 from menus.utils import set_language_changer
 
 from simple_translation.middleware import filter_queryset_language
-from simple_translation.utils import get_translation_filter, get_translation_filter_language
+from simple_translation.utils import get_translation_filter
+
+from tagging.utils import get_tag
+from tagging.models import Tag, TaggedItem
 
 from cmsplugin_blog.models import Entry
 from cmsplugin_blog.utils import is_multilingual
@@ -49,7 +42,7 @@ class DateDetailView(SingleObjectTemplateResponseMixin, BaseDateDetailView):
         if queryset is None:
             queryset = self.get_queryset()
 
-        if not self.get_allow_future() and date > datetime.date.today(): # pragma: no cover
+        if not self.get_allow_future() and date > datetime.date.today():  # pragma: no cover
             raise Http404(_(u"Future %(verbose_name_plural)s not available because %(class_name)s.allow_future is False.") % {
                 'verbose_name_plural': queryset.model._meta.verbose_name_plural,
                 'class_name': self.__class__.__name__,
@@ -58,20 +51,21 @@ class DateDetailView(SingleObjectTemplateResponseMixin, BaseDateDetailView):
         # Filter down a queryset from self.queryset using the date from the
         # URL. This'll get passed as the queryset to DetailView.get_object,
         # which'll handle the 404
-        date_field = self.get_date_field()
-        field = queryset.model._meta.get_field(date_field)
-        lookup = _date_lookup_for_field(field, date)
+        self.date_field = self.get_date_field()
+        #self.date_field = queryset.model._meta.get_field(date_field)
+        lookup = self._make_single_date_lookup(date)
         queryset = queryset.filter(**lookup)
 
         return super(BaseDateDetailView, self).get_object(queryset=queryset)
-    
+
+
 class EntryDateDetailView(DateDetailView):
     slug_field = get_translation_filter(Entry, slug=None).items()[0][0]
     date_field = 'pub_date'
     template_name_field = 'template'
     month_format = '%m'
     queryset = Entry.objects.all()
-    
+
     def get_object(self):
         try:
             obj = super(EntryDateDetailView, self).get_object()
@@ -83,7 +77,7 @@ class EntryDateDetailView(DateDetailView):
                 try:
                     queryset = self.get_unfiltered_queryset()
                     obj = super(EntryDateDetailView, self).get_object(queryset=queryset)
-                except Entry.MultipleObjectsReturned, s:
+                except Entry.MultipleObjectsReturned:
                     raise e
                 # We know there is only one title for this entry, so we can simply use get()
                 raise Redirect(obj.entrytitle_set.get().get_absolute_url())
@@ -92,10 +86,10 @@ class EntryDateDetailView(DateDetailView):
 
         set_language_changer(self.request, obj.language_changer)
         return obj
-        
+
     def get_unfiltered_queryset(self):
         return super(EntryDateDetailView, self).get_queryset().published()
-            
+
     def get_queryset(self):
         queryset = super(EntryDateDetailView, self).get_queryset()
         queryset = filter_queryset_language(self.request, queryset)
@@ -103,7 +97,7 @@ class EntryDateDetailView(DateDetailView):
             return queryset
         else:
             return queryset.published()
-    
+
     def dispatch(self, request, *args, **kwargs):
         try:
             return super(EntryDateDetailView, self).dispatch(request, *args, **kwargs)
@@ -156,7 +150,7 @@ class BlogDayArchiveView(BlogArchiveMixin, DayArchiveView):
     template_name = 'cmsplugin_blog/entry_archive_day.html'
 
 
-class BlogAuthorArchiveView(DetailView):
+class BlogAuthorArchiveView(ListView):
     model = Entry
     allow_empty = True,
     template_name = 'cmsplugin_blog/entry_author_list.html',
@@ -183,10 +177,10 @@ class TaggedObjectList(ListView):
         self.tag_instance = get_tag(tag)
         return super(TaggedObjectList, self).get(request, *args, **kwargs)
 
-    def get_queryset(self):
-        if hasattr(self.queryset_or_model, 'objects'):
-            return self.queryset_or_model.objects.all()
-        return self.queryset_or_model
+    #def get_queryset(self):
+    #    if hasattr(self.queryset_or_model, 'objects'):
+    #        return self.queryset_or_model.objects.all()
+    #    return self.queryset_or_model
 
     def get_context_data(self, **kwargs):
         tag = self.tag or self.kwargs['tag']
