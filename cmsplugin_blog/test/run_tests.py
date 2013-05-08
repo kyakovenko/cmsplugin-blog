@@ -15,7 +15,7 @@ INSTALLED_APPS = [
     'mptt',
     'menus',
     'tagging',
-    'simple_translation',    
+    'simple_translation',
     'cmsplugin_blog',
     'djangocms_utils',
     'sekizai',
@@ -35,7 +35,7 @@ MIDDLEWARE_CLASSES = [
 ]
 
 TEMPLATE_CONTEXT_PROCESSORS = [
-    "django.core.context_processors.auth",
+    "django.contrib.auth.context_processors.auth",
     "django.core.context_processors.i18n",
     "django.core.context_processors.debug",
     "django.core.context_processors.request",
@@ -45,9 +45,9 @@ TEMPLATE_CONTEXT_PROCESSORS = [
 
 
 def run_tests():
-    
+
     from django.conf import settings
-    
+
     settings.configure(
         INSTALLED_APPS=INSTALLED_APPS,
         MIDDLEWARE_CLASSES=MIDDLEWARE_CLASSES,
@@ -74,7 +74,7 @@ def run_tests():
         TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner',
         TEST_OUTPUT_VERBOSE = True
     )
-    
+
     from django.test.utils import get_runner
 
     failures = get_runner(settings)().run_tests(['cmsplugin_blog'])
