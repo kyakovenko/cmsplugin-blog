@@ -47,14 +47,15 @@ class BlogTestCase(BaseBlogTestCase):
 
     def test_01_apphook_added(self):
         with translation.override('en'):
-            self.assertEquals(reverse('blog_archive_index'), '/test-page-1/')
+            self.assertEquals(reverse('blog_archive_index'), '/en/test-page-1/')
         with translation.override('de'):
             self.assertEquals(reverse('blog_archive_index'), '/de/test-page-1/')
 
     def test_02_title_absolute_url(self):
         published_at = datetime.datetime.now() - datetime.timedelta(hours=1)
         title, entry = self.create_entry_with_title(published=True, published_at=published_at)
-        self.assertEquals(title.get_absolute_url(), '/test-page-1/%s/entry-title/' % published_at.strftime('%Y/%m/%d'))
+        with translation.override('en'):
+            self.assertEquals(title.get_absolute_url(), '/en/test-page-1/%s/entry-title/' % published_at.strftime('%Y/%m/%d'))
 
     def test_03_admin_add(self):
 
