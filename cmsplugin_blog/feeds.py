@@ -1,3 +1,4 @@
+from django.utils import translation
 from django.core.urlresolvers import reverse
 from django.contrib.syndication.views import Feed
 from django.utils.translation import ugettext_lazy as _
@@ -9,7 +10,7 @@ from simple_translation.utils import get_translation_filter, get_translation_fil
 from simple_translation.templatetags.simple_translation_tags import get_preferred_translation_from_lang
 
 from cmsplugin_blog.models import Entry
-from cmsplugin_blog.utils import is_multilingual, get_lang_name, add_current_root
+from cmsplugin_blog.utils import is_multilingual, get_lang_name
 
 
 class EntriesFeed(Feed):
@@ -21,14 +22,11 @@ class EntriesFeed(Feed):
         self.site = get_current_site(request)
         self.any_language = kwargs.get('any_language', None)
         self.language_namespace = ''
-        if is_multilingual():
-            self.language_namespace = '%s:' % self.language_code
         return None
 
     def feed_url(self, obj):
-        if self.any_language:
-            return add_current_root(reverse('%sblog_rss_any' % self.language_namespace))
-        return add_current_root(reverse('%sblog_rss' % self.language_namespace))
+        with translation.override(self.language_code):
+            return reverse('blog_rss_any') if self.any_language else reverse('blog_rss')
 
     def title(self, obj):
         if self.any_language or not is_multilingual():
@@ -36,10 +34,11 @@ class EntriesFeed(Feed):
         return _(u"%(site)s blog entries in %(lang)s") % {'site': self.site.name, 'lang': get_lang_name(self.language_code)}
 
     def link(self, obj):
-        return add_current_root(reverse('%sblog_archive_index' % self.language_namespace))
+        with translation.override(self.language_code):
+            return reverse('blog_archive_index')
 
     def item_link(self, obj):
-        return add_current_root(obj.get_absolute_url())
+        return obj.get_absolute_url()
 
     def description(self, obj):
         if self.any_language or not is_multilingual():
@@ -77,12 +76,14 @@ class TaggedEntriesFeed(EntriesFeed):
         return _(u'%(title)s tagged "%(tag)s"') % {'title': title, 'tag': self.tag}
 
     def feed_url(self, obj):
-        if self.any_language:
-            return add_current_root(reverse('%sblog_rss_any_tagged' % self.language_namespace, kwargs={'tag': self.tag}))
-        return add_current_root(reverse('%sblog_rss_tagged' % self.language_namespace, kwargs={'tag': self.tag}))
+        with translation.override(self.language_code):
+            if self.any_language:
+                return reverse('blog_rss_any_tagged', kwargs={'tag': self.tag})
+            return reverse('blog_rss_tagged', kwargs={'tag': self.tag})
 
     def link(self, obj):
-        return add_current_root(reverse('%sblog_archive_tagged' % self.language_namespace, kwargs={'tag': self.tag}))
+        with translation.override(self.language_code):
+            return reverse('blog_archive_tagged', kwargs={'tag': self.tag})
 
     def description(self, obj):
         description = super(TaggedEntriesFeed, self).description(obj)
@@ -107,12 +108,14 @@ class AuthorEntriesFeed(EntriesFeed):
         return _(u'%(title)s by %(author)s') % {'title': title, 'author': self.author}
 
     def feed_url(self, obj):
-        if self.any_language:
-            return add_current_root(reverse('%sblog_rss_any_author' % self.language_namespace, kwargs={'author': self.author}))
-        return add_current_root(reverse('%sblog_rss_author' % self.language_namespace, kwargs={'author': self.author}))
+        with translation.override(self.language_code):
+            if self.any_language:
+                return reverse('blog_rss_any_author', kwargs={'author': self.author})
+            return reverse('blog_rss_author', kwargs={'author': self.author})
 
     def link(self, obj):
-        return add_current_root(reverse('%sblog_archive_author' % self.language_namespace, kwargs={'author': self.author}))
+        with translation.override(self.language_code):
+            return reverse('blog_archive_author', kwargs={'author': self.author})
 
     def description(self, obj):
         description = super(AuthorEntriesFeed, self).description(obj)

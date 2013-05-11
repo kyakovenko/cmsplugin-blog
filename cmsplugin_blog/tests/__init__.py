@@ -229,8 +229,8 @@ class BlogRSSTestCase(BaseBlogTestCase):
             self.assertNotContains(response, 'in English')
 
     def test_07_no_multilingual(self):
-        mwc = [mw for mw in settings.MIDDLEWARE_CLASSES if mw != 'cmsplugin_blog.middleware.MultilingualBlogEntriesMiddleware']
-        with SettingsOverride(MIDDLEWARE_CLASSES=mwc):
+        mwc = [mw for mw in settings.MIDDLEWARE_CLASSES if mw not in multilingual_middlewares]
+        with SettingsOverride(self.client, MIDDLEWARE_CLASSES=mwc):
             published_at = datetime.datetime.now() - datetime.timedelta(hours=1)
             title, entry = self.create_entry_with_title(published=True, published_at=published_at)
             with translation.override('en'):
@@ -342,10 +342,18 @@ class RedirectTestCase(BaseBlogTestCase):
 
             response = self.client.get(u'/de/test-page-1/2011/08/31/entry-title/')
             self.assertEqual(response.status_code, 200)
+
+            # test redirect when we have only translation for the entry
+            response = self.client.get(u'/en/test-page-1/2011/08/31/entry-title/')
+            self.assertEqual(response.status_code, 302)
+            self.assertRedirects(response, u'/de/test-page-1/2011/08/31/entry-title/')
+
+            self.create_entry_title(entry, language='nb')
+            # test the same when we have some translations for the entry
             response = self.client.get(u'/en/test-page-1/2011/08/31/entry-title/')
             self.assertEqual(response.status_code, 404)
 
-            self.create_entry_title(entry, language='nb')
+            self.create_entry_title(entry, language='en')
             title.delete()
             response = self.client.get(u'/de/test-page-1/2011/08/31/entry-title/')
             self.assertEqual(response.status_code, 404)
