@@ -2,9 +2,10 @@ from __future__ import with_statement
 import datetime
 
 from django.conf import settings
-from django.core.urlresolvers import reverse
-from django.contrib.auth.models import User
 from django.utils import translation
+from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
+from django.template.context import RequestContext
 
 from cms.models.placeholdermodel import Placeholder
 from cmsplugin_blog.test.testcases import BaseBlogTestCase
@@ -380,13 +381,13 @@ class LatestEntriesTestCase(BaseBlogTestCase):
             plugin = LatestEntriesPlugin(placeholder=ph, plugin_type='CMSLatestEntriesPlugin', limit=2, current_language_only=True)
             plugin.insert_at(None, position='last-child', save=False)
             plugin.save()
-            self.assertEquals(plugin.render_plugin({'request': r}).count('english title'), 1)
-            self.assertEquals(plugin.render_plugin({'request': r}).count('german title'), 0)
+            self.assertEquals(plugin.render_plugin(RequestContext(r)).count('english title'), 1)
+            self.assertEquals(plugin.render_plugin(RequestContext(r)).count('german title'), 0)
             plugin = LatestEntriesPlugin(placeholder=ph, plugin_type='CMSLatestEntriesPlugin', limit=2, current_language_only=False)
             plugin.insert_at(None, position='last-child', save=False)
             plugin.save()
-            self.assertEquals(plugin.render_plugin({'request': r}).count('english title'), 1)
-            self.assertEquals(plugin.render_plugin({'request': r}).count('german title'), 1)
+            self.assertEquals(plugin.render_plugin(RequestContext(r)).count('english title'), 1)
+            self.assertEquals(plugin.render_plugin(RequestContext(r)).count('german title'), 1)
 
 
 class SitemapsTestCase(BaseBlogTestCase):

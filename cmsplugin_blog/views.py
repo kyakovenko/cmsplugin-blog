@@ -114,8 +114,6 @@ class EntryArchiveIndexView(ArchiveIndexView):
 
     def get_dated_items(self):
         items = super(EntryArchiveIndexView, self).get_dated_items()
-        from cmsplugin_blog.urls import language_changer
-        set_language_changer(self.request, language_changer)
         return items
 
     def get_dated_queryset(self, **lookup):
@@ -176,11 +174,6 @@ class TaggedObjectList(ListView):
         tag = self.tag or kwargs.get('tag')
         self.tag_instance = get_tag(tag)
         return super(TaggedObjectList, self).get(request, *args, **kwargs)
-
-    #def get_queryset(self):
-    #    if hasattr(self.queryset_or_model, 'objects'):
-    #        return self.queryset_or_model.objects.all()
-    #    return self.queryset_or_model
 
     def get_context_data(self, **kwargs):
         tag = self.tag or self.kwargs['tag']

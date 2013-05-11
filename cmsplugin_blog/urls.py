@@ -14,12 +14,6 @@ blog_info_dict = {
     'paginate_by': 15,
 }
 
-
-def language_changer(lang):
-    request = language_changer.request
-    return request.get_full_path()
-
-
 blog_detail = EntryDateDetailView.as_view(
     queryset=Entry.objects.all(),
     date_field='pub_date',
