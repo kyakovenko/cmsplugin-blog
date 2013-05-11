@@ -1,18 +1,19 @@
 import datetime
-from django.conf import settings
 from django import template
+from django.conf import settings
 from django.contrib.auth import models as auth_models
 
 from tagging.models import Tag
 
+from cms.models import Placeholder
 from cms.utils import get_language_from_request
 from cmsplugin_blog.models import Entry, EntryTitle
-from cms.models import Placeholder
 
 from simple_translation.translation_pool import translation_pool
 from simple_translation.utils import get_translation_filter_language
 
 register = template.Library()
+
 
 @register.inclusion_tag('cmsplugin_blog/month_links_snippet.html', takes_context=True)
 def render_month_links(context):
@@ -23,6 +24,7 @@ def render_month_links(context):
         'dates': Entry.published.filter(**kw).dates('pub_date', 'month'),
     }
 
+
 @register.inclusion_tag('cmsplugin_blog/tag_links_snippet.html', takes_context=True)
 def render_tag_links(context):
     request = context["request"]
@@ -32,6 +34,7 @@ def render_tag_links(context):
     return {
         'tags': Tag.objects.usage_for_model(Entry, filters=filters)
     }
+
 
 @register.inclusion_tag('cmsplugin_blog/author_links_snippet.html', takes_context=True)
 def render_author_links(context, order_by='username'):
@@ -47,6 +50,7 @@ def render_author_links(context, order_by='username'):
             ).values('author')
         ).order_by(order_by).values_list('username', flat=True)
     }
+
 
 @register.filter
 def choose_placeholder(placeholders, placeholder):

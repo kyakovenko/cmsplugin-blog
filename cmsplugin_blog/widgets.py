@@ -1,8 +1,10 @@
+import json
+from tagging.models import Tag
+
 from django import forms
 from django.conf import settings
-from django.utils import simplejson
 from django.utils.safestring import mark_safe
-from tagging.models import Tag
+
 from cmsplugin_blog.models import Entry
 
 
@@ -23,8 +25,7 @@ class AutoCompleteTagInput(forms.TextInput):
     def render(self, name, value, attrs=None):
         output = super(AutoCompleteTagInput, self).render(name, value, attrs)
         page_tags = Tag.objects.usage_for_model(Entry)
-        tag_list = simplejson.dumps([tag.name for tag in page_tags],
-                                    ensure_ascii=False)
+        tag_list = json.dumps([tag.name for tag in page_tags], ensure_ascii=False)
         return output + mark_safe(u'''<script type="text/javascript">
             var availableTags = %s
             function split( val ) {

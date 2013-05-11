@@ -3,7 +3,8 @@ from django.conf.urls import url, patterns
 from cmsplugin_blog.feeds import EntriesFeed, TaggedEntriesFeed, AuthorEntriesFeed
 from cmsplugin_blog.models import Entry
 from cmsplugin_blog.views import (EntryDateDetailView, EntryArchiveIndexView, BlogYearArchiveView,
-    BlogMonthArchiveView, BlogDayArchiveView, BlogAuthorArchiveView, BlogTaggedArchiveView)
+                                  BlogMonthArchiveView, BlogDayArchiveView, BlogAuthorArchiveView,
+                                  BlogTaggedArchiveView)
 
 
 blog_info_dict = {

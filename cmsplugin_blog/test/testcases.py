@@ -46,7 +46,7 @@ class BaseBlogTestCase(CMSTestCase):
             entry_kwargs['pub_date'] = published_at
         entry = Entry.objects.create(**entry_kwargs)
         entrytitle = self.create_entry_title(entry, title=title, slug=slug, language=language, author=author, **kwargs)
-        return (entrytitle, entry)
+        return entrytitle, entry
         
     def create_entry_title(self, entry, title=None, slug=None, language=None, author=None, **kwargs):
         if not title:

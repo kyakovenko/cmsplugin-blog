@@ -113,8 +113,12 @@ class BlogTestCase(BaseBlogTestCase):
         add_url = reverse('admin:cmsplugin_blog_entry_add')
 
         # add english
-        response = self.client.post(add_url, {'language': 'en', 'title': 'english', 'slug': 'english',
-            'pub_date_0': '2011-01-16', 'pub_date_1': '09:09:09', 'author': '1'})
+        response = self.client.post(add_url, {'language': 'en',
+                                              'title': 'english',
+                                              'slug': 'english',
+                                              'pub_date_0': '2011-01-16',
+                                              'pub_date_1': '09:09:09',
+                                              'author': '1'})
         # self.assertEquals(response.content, '')
 
         self.assertEquals(response.status_code, 302)
@@ -122,8 +126,11 @@ class BlogTestCase(BaseBlogTestCase):
         edit_url = reverse('admin:cmsplugin_blog_entry_change', args=(1,))
 
         # add german
-        response = self.client.post(edit_url, {'language': 'de', 'title': 'german', 'slug': 'german',
-            'pub_date_0': '2011-01-16', 'pub_date_1': '09:09:09'})
+        response = self.client.post(edit_url, {'language': 'de',
+                                               'title': 'german',
+                                               'slug': 'german',
+                                               'pub_date_0': '2011-01-16',
+                                               'pub_date_1': '09:09:09'})
         self.assertEquals(response.status_code, 302)
 
         entry = Entry.objects.get(pk=1)
@@ -228,55 +235,47 @@ class ViewsTestCase(BaseBlogTestCase):
 
         with translation.override('en'):
             response = self.client.get(reverse('blog_archive_month',
-                kwargs={
-                    'year': published_at.strftime('%Y'),
-                    'month': published_at.strftime('%m')
-                }))
+                                       kwargs={'year': published_at.strftime('%Y'),
+                                               'month': published_at.strftime('%m')
+                                               }))
             self.assertEquals(response.status_code, 200)
 
         with translation.override('en'):
             response = self.client.get(reverse('blog_archive_day',
-                kwargs={
-                    'year': published_at.strftime('%Y'),
-                    'month': published_at.strftime('%m'),
-                    'day': published_at.strftime('%d')
-                }))
+                                       kwargs={'year': published_at.strftime('%Y'),
+                                               'month': published_at.strftime('%m'),
+                                               'day': published_at.strftime('%d')
+                                               }))
             self.assertEquals(response.status_code, 200)
 
         with translation.override('en'):
             response = self.client.get(reverse('blog_detail',
-                kwargs={
-                    'year': published_at.strftime('%Y'),
-                    'month': published_at.strftime('%m'),
-                    'day': published_at.strftime('%d'),
-                    'slug': title.slug
-                }))
+                                       kwargs={'year': published_at.strftime('%Y'),
+                                               'month': published_at.strftime('%m'),
+                                               'day': published_at.strftime('%d'),
+                                               'slug': title.slug
+                                               }))
             self.assertEquals(response.status_code, 200)
 
         with translation.override('en'):
             response = self.client.get(reverse('blog_archive_tagged',
-                kwargs={
-                    'tag': 'test'
-                }))
+                                       kwargs={'tag': 'test'}))
             self.assertEquals(response.status_code, 200)
 
         with translation.override('en'):
             response = self.client.get(reverse('blog_archive_author',
-                kwargs={
-                    'author': user.username
-                }))
+                                       kwargs={'author': user.username}))
             self.assertEquals(response.status_code, 200)
 
         self.client.login(username='admin', password='admin')
 
         with translation.override('en'):
             response = self.client.get(reverse('blog_detail',
-                kwargs={
-                    'year': published_at.strftime('%Y'),
-                    'month': published_at.strftime('%m'),
-                    'day': published_at.strftime('%d'),
-                    'slug': title.slug
-                }))
+                                       kwargs={'year': published_at.strftime('%Y'),
+                                               'month': published_at.strftime('%m'),
+                                               'day': published_at.strftime('%d'),
+                                               'slug': title.slug
+                                               }))
             self.assertEquals(response.status_code, 200)
 
 

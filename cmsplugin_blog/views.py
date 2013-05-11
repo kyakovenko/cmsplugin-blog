@@ -4,7 +4,7 @@ from django.http import Http404
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.dates import (BaseDateDetailView, ArchiveIndexView,
-    YearArchiveView, MonthArchiveView, DayArchiveView, _date_from_string)
+                                        YearArchiveView, MonthArchiveView, DayArchiveView, _date_from_string)
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.list import ListView
 
@@ -66,9 +66,9 @@ class EntryDateDetailView(DateDetailView):
     month_format = '%m'
     queryset = Entry.objects.all()
 
-    def get_object(self):
+    def get_object(self, queryset=None):
         try:
-            obj = super(EntryDateDetailView, self).get_object()
+            obj = super(EntryDateDetailView, self).get_object(queryset)
         except Http404, e:
             # No entry has been found for a given language, we fallback to search for an entry in any language
             # Could find multiple entries, in this way we cannot decide which one is the right one, so we let

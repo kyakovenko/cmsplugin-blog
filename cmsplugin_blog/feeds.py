@@ -62,6 +62,7 @@ class EntriesFeed(Feed):
     def item_pubdate(self, item):
         return item.entry.pub_date
 
+
 class TaggedEntriesFeed(EntriesFeed):
     title_template = "cmsplugin_blog/feed_tagged_title.html"
     description_template = "cmsplugin_blog/feed_tagged_description.html"
