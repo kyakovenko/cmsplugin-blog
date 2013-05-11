@@ -1,10 +1,11 @@
 import datetime
 
-from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models.query import QuerySet
 from django.conf import settings
-from django.utils.translation import get_language, ugettext_lazy as _
+from django.db.models.query import QuerySet
+from django.core.urlresolvers import reverse, get_urlconf
+from django.utils import translation
+from django.utils.translation import ugettext_lazy as _
 
 from cms.utils.urlutils import urljoin
 
@@ -16,6 +17,9 @@ from tagging.fields import TagField
 from simple_translation.actions import SimpleTranslationPlaceholderActions
 from djangocms_utils.fields import M2MPlaceholderField
 
+multilingual_middlewares = ['django.middleware.locale.LocaleMiddleware',
+                            'cms.middleware.multilingual.MultilingualURLMiddleware',
+                            'cmsplugin_blog.middleware.MultilingualBlogEntriesMiddleware']
 
 class PublishedEntriesQueryset(QuerySet):
 
@@ -53,10 +57,10 @@ class Entry(models.Model):
 
     def get_absolute_url(self, language=None):
         if not language:
-            language = get_language()
+            language = translation.get_language()
         try:
             url = self.entrytitle_set.get(language=language).get_absolute_url()
-            if url[1:len(language)+1] == language:
+            if url[1:len(language)+1] == translation.get_language():
                 url = url[len(language)+1:]
             return url
         except EntryTitle.DoesNotExist:
@@ -68,15 +72,14 @@ class Entry(models.Model):
             return url
 
         # There is no entry in the given language, we return blog's root
-
         blog_prefix = ''
-
-        try:
-            title = Title.objects.public().get(application_urls='BlogApphook', language=language)
-            blog_prefix = urljoin(reverse('pages-root'), title.overwrite_url or title.slug)
-        except Title.DoesNotExist:
-            # Blog app hook not defined anywhere?
-            pass
+        with translation.override(language):
+            try:
+                title = Title.objects.public().get(application_urls='BlogApphook', language=language)
+                blog_prefix = urljoin(reverse('pages-root'), title.overwrite_url or title.slug)
+            except Title.DoesNotExist:
+                # Blog app hook not defined anywhere?
+                pass
 
         return blog_prefix or reverse('pages-root')
 
@@ -107,15 +110,19 @@ class AbstractEntryTitle(models.Model):
     def __unicode__(self):
         return self.title
 
-    def _get_absolute_url(self):
-        language_namespace = 'cmsplugin_blog.middleware.MultilingualBlogEntriesMiddleware' in settings.MIDDLEWARE_CLASSES and '%s:' % self.language or ''
-        return ('%sblog_detail' % language_namespace, (), {
-            'year': self.entry.pub_date.strftime('%Y'),
-            'month': self.entry.pub_date.strftime('%m'),
-            'day': self.entry.pub_date.strftime('%d'),
-            'slug': self.slug
-        })
-    get_absolute_url = models.permalink(_get_absolute_url)
+    def get_absolute_url(self):
+        language_namespace = translation.get_language()
+        for middleware in multilingual_middlewares:
+            if middleware in settings.MIDDLEWARE_CLASSES:
+                language_namespace = self.language
+                break
+        with translation.override(language_namespace):
+            return reverse('blog_detail', None, kwargs={
+                           'year': self.entry.pub_date.year,
+                           'month': self.entry.pub_date.strftime('%m'),
+                           'day': self.entry.pub_date.strftime('%d'),
+                           'slug': self.slug
+                           })
 
     class Meta:
         unique_together = ('language', 'slug')

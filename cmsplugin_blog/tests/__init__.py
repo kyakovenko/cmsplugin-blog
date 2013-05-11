@@ -7,9 +7,8 @@ from django.contrib.auth.models import User
 from django.utils import translation
 
 from cms.models.placeholdermodel import Placeholder
-
-from cmsplugin_blog.models import Entry, LatestEntriesPlugin
 from cmsplugin_blog.test.testcases import BaseBlogTestCase
+from cmsplugin_blog.models import Entry, LatestEntriesPlugin, multilingual_middlewares
 
 
 class NULL:
@@ -311,15 +310,17 @@ class LanguageChangerTestCase(BaseBlogTestCase):
         title, entry = self.create_entry_with_title(published=True, published_at=published_at)
         self.create_entry_title(entry, title='german', language='de')
 
-        from django.utils.translation import activate
-        activate('en')
-        self.assertEquals(entry.get_absolute_url(), u'/test-page-1/2011/08/31/entry-title/')
+        with translation.override('en'):
+            self.assertEquals(entry.get_absolute_url(), u'/test-page-1/2011/08/31/entry-title/')
+
+        with translation.override('de'):
+            self.assertEquals(entry.get_absolute_url(), u'/test-page-1/2011/08/31/german/')
 
         self.assertEquals(entry.get_absolute_url('en'), u'/test-page-1/2011/08/31/entry-title/')
         self.assertEquals(entry.language_changer('en'), u'/test-page-1/2011/08/31/entry-title/')
-        self.assertEquals(entry.language_changer('de'), u'/test-page-1/2011/08/31/german/')
-        self.assertEquals(entry.language_changer('nb'), u'/test-page-1/')
-        self.assertEquals(entry.language_changer('nn'), u'/')
+        self.assertEquals(entry.language_changer('de'), u'/de/test-page-1/2011/08/31/german/')
+        self.assertEquals(entry.language_changer('nb'), u'/nb/test-page-1/')
+        self.assertEquals(entry.language_changer('nn'), u'/en/')
 
 
 class RedirectTestCase(BaseBlogTestCase):
@@ -330,10 +331,7 @@ class RedirectTestCase(BaseBlogTestCase):
 
         with SettingsOverride(self.client, DEBUG=True):
             self.client.get(u'/en/')
-            mwc = [mw for mw in settings.MIDDLEWARE_CLASSES
-                   if mw not in ['cmsplugin_blog.middleware.MultilingualBlogEntriesMiddleware',
-                                 'cms.middleware.multilingual.MultilingualURLMiddleware',
-                                 'django.middleware.locale.LocaleMiddleware']]
+            mwc = [mw for mw in settings.MIDDLEWARE_CLASSES if mw not in multilingual_middlewares]
             with SettingsOverride(self.client, MIDDLEWARE_CLASSES=mwc):
                 response = self.client.get(u'/test-page-1/2011/08/31/entry-title/')
             self.assertEqual(response.status_code, 404)
@@ -369,18 +367,18 @@ class LatestEntriesTestCase(BaseBlogTestCase):
                                                     published_at=published_at, language='de', title='german title')
         ph = Placeholder(slot='main')
         ph.save()
-        from django.utils.translation import activate
-        activate('en')
-        plugin = LatestEntriesPlugin(placeholder=ph, plugin_type='CMSLatestEntriesPlugin', limit=2, current_language_only=True)
-        plugin.insert_at(None, position='last-child', save=False)
-        plugin.save()
-        self.assertEquals(plugin.render_plugin({'request': r}).count('english title'), 1)
-        self.assertEquals(plugin.render_plugin({'request': r}).count('german title'), 0)
-        plugin = LatestEntriesPlugin(placeholder=ph, plugin_type='CMSLatestEntriesPlugin', limit=2, current_language_only=False)
-        plugin.insert_at(None, position='last-child', save=False)
-        plugin.save()
-        self.assertEquals(plugin.render_plugin({'request': r}).count('english title'), 1)
-        self.assertEquals(plugin.render_plugin({'request': r}).count('german title'), 1)
+
+        with translation.override('en'):
+            plugin = LatestEntriesPlugin(placeholder=ph, plugin_type='CMSLatestEntriesPlugin', limit=2, current_language_only=True)
+            plugin.insert_at(None, position='last-child', save=False)
+            plugin.save()
+            self.assertEquals(plugin.render_plugin({'request': r}).count('english title'), 1)
+            self.assertEquals(plugin.render_plugin({'request': r}).count('german title'), 0)
+            plugin = LatestEntriesPlugin(placeholder=ph, plugin_type='CMSLatestEntriesPlugin', limit=2, current_language_only=False)
+            plugin.insert_at(None, position='last-child', save=False)
+            plugin.save()
+            self.assertEquals(plugin.render_plugin({'request': r}).count('english title'), 1)
+            self.assertEquals(plugin.render_plugin({'request': r}).count('german title'), 1)
 
 
 class SitemapsTestCase(BaseBlogTestCase):
