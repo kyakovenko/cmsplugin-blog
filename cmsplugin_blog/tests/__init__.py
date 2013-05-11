@@ -16,26 +16,51 @@ class NULL:
     pass
 
 
+class TranslationOverride(object):
+    """
+    Overrides Django language cookies within a language and resets them to initial values on the exit.
+
+    Example:
+    with TranslationOverride(client, 'en'):
+        ... do something
+    """
+    def __init__(self, client, language):
+        self.client = client
+        self.language = language
+        self.old_language = self.client.cookies.get(settings.LANGUAGE_COOKIE_NAME)
+
+    def __enter__(self):
+        if self.language is not None:
+            self.client.cookies.load({settings.LANGUAGE_COOKIE_NAME: self.language})
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.old_language:
+            self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = self.old_language
+
+
 class SettingsOverride(object):
     """
     Overrides Django settings within a context and resets them to their initial
     values on exit.
 
     Example:
-    with SettingsOverride(DEBUG=True):
+    with SettingsOverride(client, DEBUG=True):
         ... do something
     """
 
-    def __init__(self, **overrides):
+    def __init__(self, client, **overrides):
+        self.client = client
         self.overrides = overrides
 
     def __enter__(self):
         self.old = {}
+        self.client.handler._request_middleware = None
         for key, value in self.overrides.items():
             self.old[key] = getattr(settings, key, NULL)
             setattr(settings, key, value)
 
     def __exit__(self, type, value, traceback):
+        self.client.handler._request_middleware = None
         for key, value in self.old.items():
             if value is not NULL:
                 setattr(settings, key, value)
@@ -303,27 +328,31 @@ class RedirectTestCase(BaseBlogTestCase):
         published_at = datetime.datetime(2011, 8, 31, 11, 0)
         title, entry = self.create_entry_with_title(published=True, published_at=published_at, language='de')
 
-        with SettingsOverride(DEBUG=True):
+        with SettingsOverride(self.client, DEBUG=True):
             self.client.get(u'/en/')
-            mwc = [mw for mw in settings.MIDDLEWARE_CLASSES if mw != 'cmsplugin_blog.middleware.MultilingualBlogEntriesMiddleware']
-            with SettingsOverride(MIDDLEWARE_CLASSES=mwc):
+            mwc = [mw for mw in settings.MIDDLEWARE_CLASSES
+                   if mw not in ['cmsplugin_blog.middleware.MultilingualBlogEntriesMiddleware',
+                                 'cms.middleware.multilingual.MultilingualURLMiddleware',
+                                 'django.middleware.locale.LocaleMiddleware']]
+            with SettingsOverride(self.client, MIDDLEWARE_CLASSES=mwc):
                 response = self.client.get(u'/test-page-1/2011/08/31/entry-title/')
             self.assertEqual(response.status_code, 404)
 
-            response = self.client.get(u'/test-page-1/2011/08/31/entry-title/')
-            self.assertRedirects(response, u'/de/test-page-1/2011/08/31/entry-title/')
+            with TranslationOverride(self.client, 'de'):
+                response = self.client.get(u'/test-page-1/2011/08/31/entry-title/')
+                self.assertRedirects(response, u'/de/test-page-1/2011/08/31/entry-title/')
 
             response = self.client.get(u'/de/test-page-1/2011/08/31/entry-title/')
             self.assertEqual(response.status_code, 200)
+            response = self.client.get(u'/en/test-page-1/2011/08/31/entry-title/')
+            self.assertEqual(response.status_code, 404)
 
             self.create_entry_title(entry, language='nb')
-            self.client.get(u'/en/')
-            response = self.client.get(u'/test-page-1/2011/08/31/entry-title/')
+            title.delete()
+            response = self.client.get(u'/de/test-page-1/2011/08/31/entry-title/')
             self.assertEqual(response.status_code, 404)
-            entry.delete()
-            response = self.client.get(u'/de/')
-            response = self.client.get(u'/test-page-1/2011/08/31/entry-title/')
-            self.assertEqual(response.status_code, 404)
+            response = self.client.get(u'/nb/test-page-1/2011/08/31/entry-title/')
+            self.assertEqual(response.status_code, 200)
 
 
 class LatestEntriesTestCase(BaseBlogTestCase):

@@ -72,7 +72,7 @@ class Entry(models.Model):
         blog_prefix = ''
 
         try:
-            title = Title.objects.get(application_urls='BlogApphook', language=language)
+            title = Title.objects.public().get(application_urls='BlogApphook', language=language)
             blog_prefix = urljoin(reverse('pages-root'), title.overwrite_url or title.slug)
         except Title.DoesNotExist:
             # Blog app hook not defined anywhere?
