@@ -60,8 +60,10 @@ def choose_placeholder(placeholders, placeholder):
         return None
 
 
-@register.inclusion_tag('admin/cmsplugin_blog/admin_helpers.html')
-def admin_helpers():
+@register.inclusion_tag('admin/cmsplugin_blog/admin_helpers.html', takes_context=True)
+def admin_helpers(context):
     return {
         'use_missing': 'missing' in settings.INSTALLED_APPS,
+        'STATIC_URL': context.get('STATIC_URL'),
+        'MEDIA_URL': context.get('MEDIA_URL')
     }

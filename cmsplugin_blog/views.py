@@ -1,6 +1,7 @@
 import datetime
 
 from django.http import Http404
+from django.conf import settings
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.dates import (BaseDateDetailView, ArchiveIndexView,
@@ -19,6 +20,7 @@ from tagging.models import Tag, TaggedItem
 from cmsplugin_blog.models import Entry
 from cmsplugin_blog.utils import is_multilingual
 
+PAGINATE_BY = settings.get('CMS_BLOG_PAGINATE_BY', 15)
 
 class Redirect(Exception):
     def __init__(self, *args, **kwargs):
@@ -106,9 +108,9 @@ class EntryDateDetailView(DateDetailView):
 
 
 class EntryArchiveIndexView(ArchiveIndexView):
-    date_field = 'pub_date'
     allow_empty = True
-    paginate_by = 15
+    date_field = 'pub_date'
+    paginate_by = PAGINATE_BY
     template_name_field = 'template'
     queryset = Entry.objects.all()
 
@@ -124,10 +126,10 @@ class EntryArchiveIndexView(ArchiveIndexView):
 
 class BlogArchiveMixin(object):
     model = Entry
-    date_field = 'pub_date'
-    make_object_list = True
     allow_empty = True
     month_format = '%m'
+    date_field = 'pub_date'
+    make_object_list = True
 
     def get_queryset(self):
         queryset = super(BlogArchiveMixin, self).get_queryset().published()
@@ -137,6 +139,7 @@ class BlogArchiveMixin(object):
 
 
 class BlogYearArchiveView(BlogArchiveMixin, YearArchiveView):
+    paginate_by = PAGINATE_BY
     template_name = 'cmsplugin_blog/entry_archive_year.html'
 
 
@@ -150,12 +153,16 @@ class BlogDayArchiveView(BlogArchiveMixin, DayArchiveView):
 
 class BlogAuthorArchiveView(ListView):
     model = Entry
-    allow_empty = True,
-    template_name = 'cmsplugin_blog/entry_author_list.html',
+    allow_empty = True
+    paginate_by = PAGINATE_BY
+    template_name = 'cmsplugin_blog/entry_author_list.html'
 
     def get_queryset(self):
         author = self.kwargs['author']
-        queryset = super(BlogAuthorArchiveView, self).get_queryset().published().filter(entrytitle__author__username=author)
+        queryset = super(BlogAuthorArchiveView, self).get_queryset()\
+                                                     .filter(entrytitle__author__username=author)\
+                                                     .published()\
+                                                     .distinct()
         if queryset:
             set_language_changer(self.request, queryset[0].language_changer)
         return queryset
@@ -165,10 +172,11 @@ class BlogAuthorArchiveView(ListView):
 
 
 class TaggedObjectList(ListView):
-    queryset_or_model = None
     tag = None
     related_tags = False
+    queryset_or_model = None
     related_tag_counts = True
+    paginate_by = PAGINATE_BY
 
     def get(self, request, *args, **kwargs):
         tag = self.tag or kwargs.get('tag')
@@ -180,6 +188,7 @@ class TaggedObjectList(ListView):
         self.tag_instance = get_tag(self.tag or self.kwargs['tag'])
         if self.tag_instance is None:
             raise Http404(_('No Tag found matching "%s".') % tag)
+        kwargs['tag'] = tag
         context = super(TaggedObjectList, self).get_context_data(**kwargs)
         if self.related_tags:
             context['related_tags'] = Tag.objects.related_for_model(

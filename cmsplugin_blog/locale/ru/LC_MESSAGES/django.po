@@ -54,11 +54,11 @@ msgstr "Опубликована"
 
 #: models.py:49 models.py:56
 msgid "entry"
-msgstr ""
+msgstr "запись"
 
 #: models.py:50
 msgid "entries"
-msgstr ""
+msgstr "записи"
 
 #: models.py:57
 msgid "Language"
@@ -78,7 +78,7 @@ msgstr ""
 
 #: models.py:77
 msgid "entry titles"
-msgstr ""
+msgstr "заголовки"
 
 #: models.py:83
 msgid "Number of entries items to show"

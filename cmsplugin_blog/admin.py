@@ -97,6 +97,7 @@ class M2MPlaceholderAdmin(PlaceholderTranslationAdmin):
 class BaseEntryAdmin(M2MPlaceholderAdmin):
 
     form = EntryForm
+    change_form_template = None
 
     # needed because of admin validation
     prepopulated_fields = not settings.DEBUG and {'slug': ('title',)} or {}

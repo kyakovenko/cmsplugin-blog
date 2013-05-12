@@ -3,9 +3,9 @@ import datetime
 from django.db import models
 from django.conf import settings
 from django.db.models.query import QuerySet
-from django.core.urlresolvers import reverse, get_urlconf
-from django.utils import translation
+from django.utils import translation, timezone
 from django.utils.translation import ugettext_lazy as _
+from django.core.urlresolvers import reverse, get_urlconf
 
 from cms.utils.urlutils import urljoin
 
@@ -117,10 +117,11 @@ class AbstractEntryTitle(models.Model):
                 language_namespace = self.language
                 break
         with translation.override(language_namespace):
+            pub_date = timezone.localtime(self.entry.pub_date)
             return reverse('blog_detail', None, kwargs={
-                           'year': self.entry.pub_date.year,
-                           'month': self.entry.pub_date.strftime('%m'),
-                           'day': self.entry.pub_date.strftime('%d'),
+                           'year': pub_date.year,
+                           'month': pub_date.strftime('%m'),
+                           'day': pub_date.strftime('%d'),
                            'slug': self.slug
                            })
 
