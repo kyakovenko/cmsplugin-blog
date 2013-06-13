@@ -20,7 +20,9 @@ from tagging.models import Tag, TaggedItem
 from cmsplugin_blog.models import Entry
 from cmsplugin_blog.utils import is_multilingual
 
-PAGINATE_BY = settings.get('CMS_BLOG_PAGINATE_BY', 15)
+
+PAGINATE_BY = getattr(settings, 'CMS_BLOG_PAGINATE_BY', 15)
+
 
 class Redirect(Exception):
     def __init__(self, *args, **kwargs):
